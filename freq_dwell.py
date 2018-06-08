@@ -6,37 +6,27 @@ Created on Mon Jun  4 20:06:41 2018
 """
 
 kinds= ['correlation','partial correlation','tangent','covariance']
-def freq_dwell(labels,n_states=5,kinds=kinds):
-    """
-    Computes Group-level frequency of occurence and average dwell time per state. 
-    Parameters
-    ----------
-    labels: array of labels computed from DynamicConnectivityMeasure
-    n_states: number of dynamic connectivity states
-    kinds: kinds of connecitivty measure 
-    
-    Returns
-    -------
-    mean_dwell: Group-level dwell time
-    
-    counter: Group-level average frequency of occurrence
-    
-    """
-    counter,mean_dwell=dict(),dict()
-    for kind in kinds:
-        n_subj=labels[kind].shape[0]
-        counter[kind]=np.zeros((n_subj,n_states))
-        dwell[kind]=np.zeros((n_subj,n_states))
-        mean_dwell[kind]=np.empty((n_subj,n_states))
+mods=['correlation']
+def freq_dwell(labels,n_states=5,mods=mods):
+    counter,trans,dwell,freq,grp_freq,grp_dwell=={},{},{},{},{},{}
+    for mod in mods:
+        n_subj=labels[mod].shape[0]
+        counter[mod]=np.zeros((n_subj,n_states))
+        trans[mod]=np.zeros((n_subj,n_states))
+        dwell[mod]=np.zeros((n_subj,n_states))
+        freq[mod]=np.zeros((n_subj,n_states))
         for i in range(n_subj):
-            val_old=1
-            for  val in labels[kind][i]:
-                for j in range(n_states):
+            val_old=0
+            for  val in labels[mod][i]:
+                for j in np.arange(0,n_states):
                     if val == j:
-                        counter[kind][i,j] = counter[kind][i,j] +1
-                    if val != val_old:
-                        dwell[kind][i,j]=dwell[kind][i,j]+1
-                    val_old=val
-                    mean_dwell[kind][i,j]= (counter[kind][i,j]/dwell[kind][i,j])
-                    counter[kind][i,j]=100*counter[kind][i,j]/len(labels)
-    return mean_dwell,counter 
+                        counter[mod][i,j] = counter[mod][i,j] +1          
+
+                    if val != val_old and val==j:
+                        trans[mod][i,j] += 1
+                val_old=val          
+        dwell[mod]= counter[mod]/trans[mod]
+        freq[mod]=counter[mod]*100/labels[mod][i].shape[0]
+        grp_freq[mod]=freq[mod].mean(axis=0)
+        grp_dwell[mod]=dwell[mod].mean(axis=0)
+    return dwell,freq,grp_dwell,grp_freq

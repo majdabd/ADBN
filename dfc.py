@@ -4,7 +4,7 @@ Created on Mon Jun  4 19:14:50 2018
 
 @author: majd
 """
-
+import os
 import nilearn.connectome
 import numpy as np
 from scipy import signal

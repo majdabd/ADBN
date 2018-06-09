@@ -170,7 +170,7 @@ def conn_highvariance(allcovdata):
         mtd_allsubj_highvar.append(curcov[ind_highvar])
     return np.vstack(mtd_allsubj_highvar)
 
-def dfc_slid_window(X,ws=30.,ss=1): 
+def dfc_slid_window(X,ws=30,ss=1): 
         """
         Computes Sliding-window time-series per subject per region
         
@@ -188,7 +188,7 @@ def dfc_slid_window(X,ws=30.,ss=1):
         nsubj=X.shape[0] # number of subjects
         nvolm=X.shape[1] # number of volumes
         nfeat=X.shape[2] # number of brain regions   
-        slwin_ts=np.ndarray((nsubj,(nvolm-ws)//ss,ws,nfeat))
+        slwin_ts=np.ndarray((nsubj,np.int16(np.ceil((nvolm-ws)//ss)),ws,nfeat))
         for idx,s in enumerate(X):
             fulltimewin = np.arange(nvolm,dtype='int32')
             swins= sliding_window_1d(a=fulltimewin,ws=ws,ss=ss)

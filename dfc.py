@@ -170,15 +170,16 @@ def conn_highvariance(allcovdata):
         mtd_allsubj_highvar.append(curcov[ind_highvar])
     return np.vstack(mtd_allsubj_highvar)
 
-def dfc_slid_window(X,ws=30,ss=1): 
+def dfc_slid_window(X,ws,ss=1): 
         """
-        Computes Sliding-window time-series per subject per region
+        Computes Sliding-window time-series per subject per region.
+        Applies a Tukey window for tapering 
         
         Parameters
         ----------
         X: {array-like}, shape = (n_subjects , n_volumes , n_regions)
            resting state BOLD time-series for subjects
-        ws : Window size (default=30)
+        ws : Window size 
         ss: Sliding step size (default=1)
         
         Returns
@@ -202,9 +203,9 @@ def dfc_slid_window(X,ws=30,ss=1):
         return slwin_ts,slwin_ts.shape[1]
 
 
-class DynamicConnectivityMeasure():
+class DynamicConnectivityKmeans():
     
-    """ Dynamic Connectivity Estimator 
+    """ Dynamic Connectivity Estimator using two passes of Kmeans on FC matrices
     Parameters
     -----------
     cov_estimator : Method of Estimating covariance/connectivity ( default= EmpiricalCovariance)

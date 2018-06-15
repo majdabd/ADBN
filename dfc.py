@@ -66,7 +66,8 @@ def taper(window,ws=60,wtype='tukey'):
     """
     if wtype == 'tukey':
         taper= scipy.signal.tukey(ws,alpha=0.5,sym=True)
-      
+    ## Removing the average value before tapering (to avoid spurious correlations at the beginning and end of the windows)
+    window = window - np.mean(window)
     out=window*taper
     
     return out

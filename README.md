@@ -5,11 +5,19 @@ The goal of this project is to opensource ongoing efforts to estimate and charac
 Contributors 
 
 Charles Zheng
+
 Kamil Bonna
+
 Karolina Finc
+
 Xenia Kobeleva
+
 Jessica Dafflon
+
 Sam Guay
+
 Mansoureh Fahimi
+
 Majd Abdallah
+
 Nicolas Farrugia

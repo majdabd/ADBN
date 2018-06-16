@@ -156,7 +156,7 @@ def conn_highvariance(allcovdata):
     
     for curcov in allcovdata:
 
-        # calculate variance of MTD intra subject
+        # calculate variance of connectivity intra subject
         var_mtd_allsubj.append([a.mean() for a in curcov])
 
     # Extract points with high variance ( > 95 % confidence interval )
@@ -203,6 +203,34 @@ def dfc_slid_window(X,ws,ss=1):
                     slwin_ts[idx][n][:,i]= taper(cur_ts[:,i],ws)
         return slwin_ts,slwin_ts.shape[1]
 
+def labels_to_FC(FCmatrices,clusterlabels):
+    """
+        Averages FC matrices according to clustering labels.
+        Returns an average state estimated for each subject 
+        
+        Parameters
+        ----------
+        FCmatrices: {array-like}, shape = (n_subjects , n_sl , n_regions,n_regions)
+           Functional connectivity matrices obtained from n_sl sliding windows, for a group of n_subjects subjects
+        clusterlabels: {array-like}, shape = (n_subjects , n_sl)
+           Estimated labels for each FCmatrix, per subject
+        
+        Returns
+        -------
+        dfcStates : Array-like (n_states,n_subjects,n_regions,n_regions)
+           Average state estimated for each subject 
+    """
+    nstates = np.shape(np.unique(clusterlabels))[0]
+    nroi = FCmatrices.shape[2]
+    nsubj = FCmatrices.shape[0]
+
+    dfcKmeans_meanstate = np.ndarray((nstates,nsubj,nroi,nroi))
+
+    for curstate in range(nstates):
+        for s,cursubjFC in enumerate(FCmatrices):
+            labels_list = clusterlabels[s] == curstate
+            dfcKmeans_meanstate[curstate,s] = np.mean(cursubjFC[labels_list],axis=0)
+    return dfcKmeans_meanstate
 
 class DynamicConnectivityKmeans():
     

@@ -66,7 +66,8 @@ def taper(window,ws=60,wtype='tukey'):
     """
     if wtype == 'tukey':
         taper= scipy.signal.tukey(ws,alpha=0.5,sym=True)
-      
+    ## Removing the average value before tapering (to avoid spurious correlations at the beginning and end of the windows)
+    window = window - np.mean(window)
     out=window*taper
     
     return out
@@ -155,7 +156,7 @@ def conn_highvariance(allcovdata):
     
     for curcov in allcovdata:
 
-        # calculate variance of MTD intra subject
+        # calculate variance of connectivity intra subject
         var_mtd_allsubj.append([a.mean() for a in curcov])
 
     # Extract points with high variance ( > 95 % confidence interval )
@@ -170,15 +171,16 @@ def conn_highvariance(allcovdata):
         mtd_allsubj_highvar.append(curcov[ind_highvar])
     return np.vstack(mtd_allsubj_highvar)
 
-def dfc_slid_window(X,ws=30,ss=1): 
+def dfc_slid_window(X,ws,ss=1): 
         """
-        Computes Sliding-window time-series per subject per region
+        Computes Sliding-window time-series per subject per region.
+        Applies a Tukey window for tapering 
         
         Parameters
         ----------
         X: {array-like}, shape = (n_subjects , n_volumes , n_regions)
            resting state BOLD time-series for subjects
-        ws : Window size (default=30)
+        ws : Window size 
         ss: Sliding step size (default=1)
         
         Returns
@@ -201,10 +203,38 @@ def dfc_slid_window(X,ws=30,ss=1):
                     slwin_ts[idx][n][:,i]= taper(cur_ts[:,i],ws)
         return slwin_ts,slwin_ts.shape[1]
 
+def labels_to_FC(FCmatrices,clusterlabels):
+    """
+        Averages FC matrices according to clustering labels.
+        Returns an average state estimated for each subject 
+        
+        Parameters
+        ----------
+        FCmatrices: {array-like}, shape = (n_subjects , n_sl , n_regions,n_regions)
+           Functional connectivity matrices obtained from n_sl sliding windows, for a group of n_subjects subjects
+        clusterlabels: {array-like}, shape = (n_subjects , n_sl)
+           Estimated labels for each FCmatrix, per subject
+        
+        Returns
+        -------
+        dfcStates : Array-like (n_states,n_subjects,n_regions,n_regions)
+           Average state estimated for each subject 
+    """
+    nstates = np.shape(np.unique(clusterlabels))[0]
+    nroi = FCmatrices.shape[2]
+    nsubj = FCmatrices.shape[0]
 
-class DynamicConnectivityMeasure():
+    dfcKmeans_meanstate = np.ndarray((nstates,nsubj,nroi,nroi))
+
+    for curstate in range(nstates):
+        for s,cursubjFC in enumerate(FCmatrices):
+            labels_list = clusterlabels[s] == curstate
+            dfcKmeans_meanstate[curstate,s] = np.mean(cursubjFC[labels_list],axis=0)
+    return dfcKmeans_meanstate
+
+class DynamicConnectivityKmeans():
     
-    """ Dynamic Connectivity Estimator 
+    """ Dynamic Connectivity Estimator using two passes of Kmeans on FC matrices
     Parameters
     -----------
     cov_estimator : Method of Estimating covariance/connectivity ( default= EmpiricalCovariance)

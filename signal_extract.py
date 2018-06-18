@@ -10,18 +10,26 @@ from nilearn.datasets import load_mni152_template,load_mni152_brain_mask
 brainmask = load_mni152_brain_mask()
 mem = Memory('nilearn_cache')
 
-def signal_extract(data,atlas,t_r=2.2,masker_type='Spheres',saveas='file'):
+def signal_extract(func_data=None,confounds=None,atlas_img=None,masker_type='Spheres',smoothing_fwhm=6,high_pass=0.01,low_pass=0.1,t_r=2.2,detrend=False,saveas='file'):
     
     """
     Extracts BOLD time-series from regions of interest
     
     Parameters
     ----------
-    data: Filenames of subjects. 
+    func_data: functional images ( Default= None ) 
     
-    atlas: regions or coordinates to extract signals from.
+    confounds: Confounds file used to clean signals ( Default= None )
+    
+    atlas_img: regions or coordinates to extract signals from ( Default= None )
     
     masker_type : Type of masker used to extract BOLD signals . types are : 'Spheres','Maps','Labels'
+    
+    smoothing_fwhm : Smoothing width applied to signals in mm ( Default= 6 mm )
+    
+    high_pass, low_pass: Bandpass-Filtering ( Default= 0.01-0.1 Hz )
+    
+    detrend: Detrending signals ( Default= False )
     
     saveas : Destination to save and load output (.npz)
     
@@ -38,26 +46,40 @@ def signal_extract(data,atlas,t_r=2.2,masker_type='Spheres',saveas='file'):
         
     else:
         
+        if 
+        
         if masker_type== 'Spheres':
             masker = NiftiSpheresMasker(
-                            seeds=atlas, smoothing_fwhm=6, radius=4 ,mask_img=brainmask,
-                            detrend=False, standardize=True, low_pass=0.1, high_pass=0.01, t_r=t_r)
+                            seeds=atlas_img, smoothing_fwhm=smoothing_fwhm, radius=4 ,mask_img=brainmask,
+                            detrend=False, standardize=True, low_pass=low_pass, high_pass=high_pass, t_r=t_r
+            )
         elif masker_type == 'Maps':
-            masker = NiftiMapsMasker(maps_img=atlas,mask_img=brainmask,standardize=True,
-                                 high_pass=0.01,low_pass=0.1,detrend=False,t_r=t_r,
-                                 memory_level=2,smoothing_fwhm=5,resampling_target='data',
-                                 memory=mem,verbose=5)
+            masker = NiftiMapsMasker(
+                                    maps_img=atlas_img,mask_img=brainmask,standardize=True,
+                                    low_pass=low_pass, high_pass=high_pass, t_r=t_r,
+                                    memory_level=2,smoothing_fwhm=smoothing_fwhm,resampling_target='data',
+                                    memory=mem,verbose=5
+            )
         elif masker_type == 'Labels':
-            masker = NiftiLabelsMasker(labels_img=atlas,mask_img=brainmask,standardize=True,
-                                 high_pass=0.01,low_pass=0.1,detrend=False,t_r=t_r,
-                                 memory_level=2,smoothing_fwhm=5,resampling_target='data',
-                                 memory=mem,verbose=5)
+            masker = NiftiLabelsMasker(
+                                 labels_img=atlas_img,mask_img=brainmask,standardize=True,
+                                 high_pass=high_pass,low_pass=low_pass,detrend=False,t_r=t_r,
+                                 memory_level=2,smoothing_fwhm=smoothing_fwhm,resampling_target='data',
+                                 memory=mem,verbose=5
+            )
+            
         else:
             raise ValueError("Please provide masker type")
-            
-        for func_file in data:
+        
+        if confounds is not None:    
+            for func_file, confound_file in zip(func_data,confounds):
+                time_series = masker.fit_transform(func_file,confounds=confound_file)
+                subjects_ts.append(time_series)
+                np.savez(saveas,subjects_ts)
+        else:
+          for func_file in data:
             time_series = masker.fit_transform(func_file)
             subjects_ts.append(time_series)
-            np.savez(saveas,subjects_ts)
+            np.savez(saveas,subjects_ts)   
             
     return subjects_ts

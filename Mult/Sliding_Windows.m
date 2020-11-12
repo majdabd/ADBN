@@ -138,7 +138,7 @@ switch w_shape
         tspan =  fix((T-l+1)/ss)-1 ;
         w_corr = zeros(N,N,tspan+1); 
     otherwise
-        disp('Error: value of fourth input should be ''squared'' or ''tapered'', verify value and/or order of inputs.')
+        disp('Error: Please Specify Window Shape. Options: "Squared, "Tukey", "Exponential", "Gaussian")
 end
 %% Computation of the sliding windows correlation
 for t=0:tspan     
